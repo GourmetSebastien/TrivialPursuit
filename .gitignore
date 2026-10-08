@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+data/trivial.db
+assets/sounds/*.wav
+.venv/
+venv/
+questions_exemple.xlsx
