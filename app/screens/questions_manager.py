@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QColorDialog,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QHBoxLayout,
     QHeaderView,
     QInputDialog,
@@ -20,6 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..excel_export import export_questions_to_excel
 from .excel_import_dialog import ExcelImportDialog
 
 
@@ -119,7 +121,9 @@ class QuestionsManagerScreen(QWidget):
         btn_import = QPushButton("Importer depuis Excel…")
         btn_import.setObjectName("menuButtonPrimary")
         btn_import.clicked.connect(self._import_excel)
-        for b in (btn_add_q, btn_edit_q, btn_delete_q, btn_import):
+        btn_export = QPushButton("Exporter vers Excel…")
+        btn_export.clicked.connect(self._export_excel)
+        for b in (btn_add_q, btn_edit_q, btn_delete_q, btn_import, btn_export):
             q_buttons.addWidget(b)
         right.addLayout(q_buttons)
 
@@ -270,3 +274,20 @@ class QuestionsManagerScreen(QWidget):
         dlg = ExcelImportDialog(self.db, self)
         dlg.exec()
         self.refresh()
+
+    def _export_excel(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Exporter la banque de questions", "banque_questions.xlsx", "Fichiers Excel (*.xlsx)"
+        )
+        if not path:
+            return
+        if not path.lower().endswith(".xlsx"):
+            path += ".xlsx"
+        try:
+            themes, questions = export_questions_to_excel(self.db, path)
+        except OSError as exc:
+            QMessageBox.critical(self, "Export", f"Impossible d'écrire le fichier :\n{exc}")
+            return
+        QMessageBox.information(
+            self, "Export terminé", f"{questions} question(s) exportée(s) dans {themes} feuille(s) :\n{path}"
+        )
